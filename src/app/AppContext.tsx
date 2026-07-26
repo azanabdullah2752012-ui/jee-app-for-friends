@@ -109,6 +109,10 @@ interface AppContextType {
   // Distraction-Free Focus Mode State ("Remove Extras")
   isFocusMode: boolean;
   toggleFocusMode: () => void;
+
+  // Unlocked Question Bundles
+  unlockedBundleIds: string[];
+  unlockBundle: (bundleId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -145,6 +149,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Distraction-Free Focus Mode State
   const [isFocusMode, setIsFocusMode] = useState(false);
+
+  // Unlocked Question Bundles State
+  const [unlockedBundleIds, setUnlockedBundleIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_unlocked_bundles`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const unlockBundle = (bundleId: string) => {
+    setUnlockedBundleIds((prev) => {
+      if (prev.includes(bundleId)) return prev;
+      const updated = [...prev, bundleId];
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_unlocked_bundles`, JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   // Modals
   const [isImStuckOpen, setIsImStuckOpen] = useState(false);
@@ -432,6 +451,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         weeklyActivity,
         isFocusMode,
         toggleFocusMode,
+        unlockedBundleIds,
+        unlockBundle,
       }}
     >
       {children}

@@ -23,11 +23,12 @@ import {
   type QuestionBundle,
   type QuestionItem,
 } from '../services/questionBankStore';
+import { useApp } from '../app/AppContext';
 
 export const StorePage: React.FC = () => {
+  const { unlockedBundleIds, unlockBundle } = useApp();
   const stats = getQuestionBankStats();
 
-  const [bundles, setBundles] = useState<QuestionBundle[]>(QUESTION_BUNDLES);
   const [selectedSubject, setSelectedSubject] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -39,11 +40,14 @@ export const StorePage: React.FC = () => {
   // Purchased Bundle Modal State
   const [purchasedBundle, setPurchasedBundle] = useState<QuestionBundle | null>(null);
 
+  const bundlesWithState = QUESTION_BUNDLES.map((b) => ({
+    ...b,
+    isUnlocked: b.isUnlocked || unlockedBundleIds.includes(b.id),
+  }));
+
   const handlePurchase = (bundleId: string) => {
-    setBundles((prev) =>
-      prev.map((b) => (b.id === bundleId ? { ...b, isUnlocked: true } : b))
-    );
-    const bought = bundles.find((b) => b.id === bundleId);
+    unlockBundle(bundleId);
+    const bought = QUESTION_BUNDLES.find((b) => b.id === bundleId);
     if (bought) {
       setPurchasedBundle({ ...bought, isUnlocked: true });
     }
@@ -51,7 +55,7 @@ export const StorePage: React.FC = () => {
 
   const sampleQuestions = searchQuestionBank(searchQuery, selectedSubject, 12);
 
-  const filteredBundles = bundles.filter(
+  const filteredBundles = bundlesWithState.filter(
     (b) => selectedSubject === 'All' || b.subject === selectedSubject || b.subject === 'All'
   );
 
